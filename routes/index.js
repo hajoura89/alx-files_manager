@@ -1,37 +1,45 @@
-// eslint-disable-next-line no-unused-vars
-import { Express } from 'express';
+import { Router } from 'express';
 import AppController from '../controllers/AppController';
-import AuthController from '../controllers/AuthController';
 import UsersController from '../controllers/UsersController';
+import AuthController from '../controllers/AuthController';
 import FilesController from '../controllers/FilesController';
-import { basicAuthenticate, xTokenAuthenticate } from '../middlewares/auth';
-import { APIError, errorResponse } from '../middlewares/error';
 
-/**
- * Injects routes with their handlers to the given Express application.
- * @param {Express} api
- */
-const injectRoutes = (api) => {
-  api.get('/status', AppController.getStatus);
-  api.get('/stats', AppController.getStats);
+const router = Router();
 
-  api.get('/connect', basicAuthenticate, AuthController.getConnect);
-  api.get('/disconnect', xTokenAuthenticate, AuthController.getDisconnect);
+// Route to get the status of the application
+router.get('/status', AppController.getStatus);
 
-  api.post('/users', UsersController.postNew);
-  api.get('/users/me', xTokenAuthenticate, UsersController.getMe);
+// Route to get statistics about the application
+router.get('/stats', AppController.getStats);
 
-  api.post('/files', xTokenAuthenticate, FilesController.postUpload);
-  api.get('/files/:id', xTokenAuthenticate, FilesController.getShow);
-  api.get('/files', xTokenAuthenticate, FilesController.getIndex);
-  api.put('/files/:id/publish', xTokenAuthenticate, FilesController.putPublish);
-  api.put('/files/:id/unpublish', xTokenAuthenticate, FilesController.putUnpublish);
-  api.get('/files/:id/data', FilesController.getFile);
+// Route to handle new user creation
+router.post('/users', UsersController.postNew);
 
-  api.all('*', (req, res, next) => {
-    errorResponse(new APIError(404, `Cannot ${req.method} ${req.url}`), req, res, next);
-  });
-  api.use(errorResponse);
-};
+// Route to handle user authentication
+router.get('/connect', AuthController.getConnect);
 
-export default injectRoutes;
+// Route to handle user logout
+router.get('/disconnect', AuthController.getDisconnect);
+
+// Route to get information about the currently logged-in user
+router.get('/users/me', UsersController.getMe);
+
+// Route to upload files
+router.post('/files', FilesController.postUpload);
+
+// Route to get a specific file by ID
+router.get('/files/:id', FilesController.getShow);
+
+// Route to get all files
+router.get('/files', FilesController.getIndex);
+
+// Route to publish a file
+router.put('/files/:id/publish', FilesController.putPublish);
+
+// Route to unpublish a file
+router.put('/files/:id/unpublish', FilesController.putUnpublish);
+
+// Route to get file data
+router.get('/files/:id/data', FilesController.getFile);
+
+module.exports = router;
